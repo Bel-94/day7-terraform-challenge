@@ -1,0 +1,30 @@
+# Local Terraform state files — never commit these, they may contain secrets
+terraform.tfstate
+terraform.tfstate.backup
+*.tfstate
+*.tfstate.*
+
+# Terraform working directory — generated on terraform init, not needed in git
+.terraform/
+.terraform.lock.hcl
+
+# State lock files
+*.tflock
+
+# Variable files that may contain secrets
+*.tfvars
+*.tfvars.json
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI config
+.terraformrc
+terraform.rc
