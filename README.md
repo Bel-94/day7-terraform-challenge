@@ -258,7 +258,7 @@ This test proves that each Terraform workspace stores its state in a separate fi
 
 **Command:**
 ```bash
-aws s3 ls s3://belinda-terraform-state-30daychallenge/day7/workspaces/ --recursive
+aws s3 ls s3://belinda-terraform-state-30daychallenge/day7/env:/
 ```
 
 **Expected output:** Three separate state file paths, one per workspace.
@@ -317,7 +317,7 @@ This test proves that the file layout approach stores each environment's state i
 
 **Command:**
 ```bash
-aws s3 ls s3://belinda-terraform-state-30daychallenge/environments/ --recursive
+aws s3 ls s3://belinda-terraform-state-30daychallenge/environments/ 
 ```
 
 **Expected output:** Three separate state files at distinct paths.
@@ -326,39 +326,39 @@ aws s3 ls s3://belinda-terraform-state-30daychallenge/environments/ --recursive
 
 ![File Layout State Isolation](images/file-layout-state-isolation.png)
 
-**What this proves:** Unlike workspaces where isolation is automatic, the file layout makes isolation explicit and visible. Each environment's state lives at a hardcoded unique path — there is no mechanism by which one environment could overwrite another's state.
+**What this proves:** Unlike workspaces where isolation is automatic, the file layout makes isolation explicit and visible. Each environment's state lives at a hardcoded unique path, there is no mechanism by which one environment could overwrite another's state.
 
 ---
 
 ### Test 4 — Prove Environments Don't Affect Each Other
 
-This test demonstrates that applying changes in one file layout environment has zero effect on the other environments' state files or resources.
+This is the most important test. Make a small change in dev, "update a tag"  and confirm staging is completely unaffected.
 
 **How to run:**
-1. Make a change in `environments/dev/dev_variables.tf` (e.g. change a tag value)
-2. Run `terraform apply` from `environments/dev/`
-3. Check that staging and production state files are unchanged
+1. In `environments/dev/dev_main.tf`, update a tag value (e.g. change the `Name` tag)
+2. Run `terraform plan` from `environments/dev/`; it will show 1 change
+3. Switch to `environments/staging/` and run `terraform plan`, it should show no changes at all
 
-**Command to verify staging state is untouched:**
+**Commands:**
 ```bash
-aws s3api head-object \
-  --bucket belinda-terraform-state-30daychallenge \
-  --key environments/staging/terraform.tfstate
+# In dev, change a tag in main.tf then run plan
+cd environments/dev
+terraform plan
+# shows 1 change
+
+# Switch to staging and run plan
+cd ../staging
+terraform plan
+# should show: No changes. Infrastructure is up-to-date.
 ```
 
-The `LastModified` timestamp will not have changed.
+If staging shows no changes, isolation is working perfectly.
 
-**Screenshots:**
+**Screenshot:**
 
-File layout environments apply results:
-![Dev Apply](images/environments-dev-apply.png)
-![Staging Apply](images/environments-staging-apply.png)
-![Production Apply](images/environments-production-apply.png)
+![Prove Environments Don't Affect Each Other](images/prove-environments-dont-affect-each-other.png)
 
-Staging state file still exists and is untouched:
-![Staging tfstate file exists](images/environment-staging-tfstate-file-exist.png)
-
-**What this proves:** The file layout's physical separation of state files means environments are truly independent. A `terraform destroy` in dev will not remove a single resource from staging or production.
+**What this proves:** The file layout's physical separation of state files means environments are truly independent. A change — or even a `terraform destroy` — in dev will not touch a single resource in staging or production.
 
 ---
 
@@ -385,7 +385,7 @@ Both commands should return the same subnet ID.
 
 ![Dev Output Referenced in Production](images/environment-output-dev-referenced.png)
 
-**What this proves:** `terraform_remote_state` allows environments to share information through state outputs without sharing code or state files. Production reads dev's subnet ID at plan time — if dev's subnet changes, production will pick up the new value on its next `terraform apply`.
+**What this proves:** `terraform_remote_state` allows environments to share information through state outputs without sharing code or state files. Production reads dev's subnet ID at plan time. If dev's subnet changes, production will pick up the new value on its next `terraform apply`.
 
 ---
 
