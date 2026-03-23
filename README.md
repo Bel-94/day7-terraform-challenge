@@ -358,7 +358,7 @@ If staging shows no changes, isolation is working perfectly.
 
 ![Prove Environments Don't Affect Each Other](images/prove-environments-dont-affect-each-other.png)
 
-**What this proves:** The file layout's physical separation of state files means environments are truly independent. A change — or even a `terraform destroy` — in dev will not touch a single resource in staging or production.
+**What this proves:** The file layout's physical separation of state files means environments are truly independent. A change or even a `terraform destroy` in dev will not touch a single resource in staging or production.
 
 ---
 
